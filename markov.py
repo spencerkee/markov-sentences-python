@@ -44,7 +44,7 @@ def main(filename, num_key_words, chain_length):#make smaller and smaller databa
 		seed = random.choice(start_words)
 	gen_words = list(seed)
 
-	while len(gen_words) < chain_length and gen_words[-1][-1] not in ending_punctuation:
+	while len(gen_words) < chain_length and (gen_words[-1][-1] not in ending_punctuation and len(gen_words) < chain_length):
 		try:
 			next_word = database[tuple(gen_words[-3:])]#not sure if necessary
 		except KeyError:
@@ -56,8 +56,10 @@ def main(filename, num_key_words, chain_length):#make smaller and smaller databa
 		gen_words.append(next_word)
 	print ' '.join(gen_words)
 
-for i in range(4):
-	main ('portrait', 4, float('inf'))
+for i in range(1):
+	main ('metamorphosis', 4, 100)
+
+# output = answer for answer in range()
 
 
 #replace things with correct general things, like names
