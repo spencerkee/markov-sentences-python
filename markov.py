@@ -82,7 +82,7 @@ def main(filename, num_key_words, chain_length):
         except KeyError:
             possible_next_words = []
             for i in range(len(words)):
-                if words[i] == gen_words[-1]:
+                if words[i] ==git gen_words[-1]:
                     possible_next_words.append(words[i+1])#what if only word is at the end?
             next_word = random.choice(possible_next_words)
         gen_words.append(next_word)
@@ -101,4 +101,5 @@ words that follow the last word, instead of going straight to the last step.
 >Create one function find_valid_seed() that performs the same as
 find_start_keys() and valid_seed()
 >Store non-proper nouns as lowercase?
+>Add command line support.
 '''
