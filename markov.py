@@ -99,4 +99,5 @@ isn't in the dictionary, construct databases for num_key_words ... 2.
 This means that if a key of length 4 isn't in the dictionary, it tries
 the last 3 words, then the last 2, and then just randomly selects from
 words that follow the last word, instead of going straight to the last step.
+>Add command line support.
 '''
