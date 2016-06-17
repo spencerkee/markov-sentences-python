@@ -36,7 +36,7 @@ def make_database(word_list, num_key_words):
 
 def find_start_keys(database):
     '''
-    Finds a key in a database where the first letter of the
+    Returns keys in a database where the first letter of the
     first word is uppercase.
     '''
     start_keys = []
@@ -45,19 +45,19 @@ def find_start_keys(database):
             start_keys.append(key)
     return start_keys
 
-def valid_seed(seed):
+def find_valid_seed(database, ending_punctuation):
     '''
-    Returns True if there are no ending_punctuation marks in a list of strings
-    and False otherwise. Ex: ['The', 'dog', 'jumped.'] = False, ['no','way'] = True.
+    Generates a list of start keys, shuffles and iterates through them, and returns the first one that
+    contains no strings in the list ending_punctuation.
+    Ex: ['The', 'dog', 'jumped.'] wouldn't be returned because there's a '.' but ['No','way'] would be.
     '''
-    ending_punctuation = ['.', '?', '!']
-    for word in seed:
-        for punctuation in ending_punctuation:
-            if punctuation in word:
-                return False
-    return True
+    possible_start_keys = find_start_keys(database)
+    random.shuffle(possible_start_keys)
+    for start_key in possible_start_keys:
+        if not any(punctuation in ''.join(start_key) for punctuation in ending_punctuation):
+            return list(start_key)
 
-def main(filename, num_key_words, chain_length):
+def main(filename, num_key_words, chain_length, ending_punctuation=['.', '?', '!']):
     '''
     Given a file, create a database and generate a sentence beginning with
     a random starting key. To generate the next word, check if the last
@@ -69,16 +69,11 @@ def main(filename, num_key_words, chain_length):
     '''
     words = file_to_words(filename)
     database = make_database(words, num_key_words)
-    ending_punctuation = ['.', '?', '!']
-    start_words = find_start_keys(database)
-    seed = ['.']
-    while valid_seed(seed) == False:
-        seed = random.choice(start_words)
-    gen_words = list(seed)
-    
+    gen_words = find_valid_seed(database, ending_punctuation)
+
     while (len(gen_words) < chain_length) and (gen_words[-1][-1] not in ending_punctuation):
         try:
-            next_word = random.choice(database[tuple(gen_words[-num_key_words:])])#not sure if necessary
+            next_word = random.choice(database[tuple(gen_words[-num_key_words:])])
         except KeyError:
             possible_next_words = []
             for i in range(len(words)):
@@ -93,7 +88,7 @@ if __name__ == "__main__":
 
 '''
 Future Improvements:
->Instead of essentially stepping with (num_key_words = 1) if a key \
+>Instead of essentially stepping with (num_key_words = 1) if a key
 isn't in the dictionary, construct databases for num_key_words ... 2.
 This means that if a key of length 4 isn't in the dictionary, it tries
 the last 3 words, then the last 2, and then just randomly selects from
@@ -102,4 +97,7 @@ words that follow the last word, instead of going straight to the last step.
 find_start_keys() and valid_seed()
 >Store non-proper nouns as lowercase?
 >Add command line support.
+>Add error handling.
+>Convert functions to generators where useful for performance
+>Add examples to function descriptions
 '''
