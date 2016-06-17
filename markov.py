@@ -75,14 +75,14 @@ def main(filename, num_key_words, chain_length):
     while valid_seed(seed) == False:
         seed = random.choice(start_words)
     gen_words = list(seed)
-
+    
     while (len(gen_words) < chain_length) and (gen_words[-1][-1] not in ending_punctuation):
         try:
-            next_word = database[tuple(gen_words[-3:])]#not sure if necessary
+            next_word = random.choice(database[tuple(gen_words[-num_key_words:])])#not sure if necessary
         except KeyError:
             possible_next_words = []
             for i in range(len(words)):
-                if words[i] ==git gen_words[-1]:
+                if words[i] == gen_words[-1]:
                     possible_next_words.append(words[i+1])#what if only word is at the end?
             next_word = random.choice(possible_next_words)
         gen_words.append(next_word)
