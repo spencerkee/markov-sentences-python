@@ -62,47 +62,44 @@ def make_database(word_list, num_key_words):
             database[key] = [ngram[-1]]
     return database
 
-def find_start_keys(database):
+def key_has_valid_punctuation(key, ending_punctuation=['.', '?', '!']):
     '''
-    Returns keys in a database where the first letter of the
-    first word is uppercase.
+    Returns True if a key has no words that end in certain punctuation. 
+
+    This is used so that generated sentences don't look like "all she wrote? Gregor kicked the ball."
+    Works by creating concatenting all last letters of words in the key and checking for any ending punctuation marks
+    
+    EXAMPLE: 
+    ('One', 'morning,') = True
+    ('Gregor', 'Samsa') = True
+    ('when', 'Gregor') = False
+    '''
+    return not any(punctuation in ''.join([i[-1] for i in key]) for punctuation in ending_punctuation)
+
+def key_has_valid_capitalization(key):
+    '''
+    Returns True if the first letter of the first word is uppercase.
 
     This is used so that the generated sentences begin more realistically.
 
     EXAMPLE: 
-    For the dictionary
-
-    {('One', 'morning,'): ['when'],
-    ('morning,', 'when'): ['Gregor'],
-    ('when', 'Gregor'): ['Samsa'],
-    ('Gregor', 'Samsa'): ['woke']}
-
-    the function returns
-
-    [('Gregor', 'Samsa'), ('One', 'morning,')]
+    ('One', 'morning,') = True
+    ('vermin.', 'He') = False
     '''
-    start_keys = []
-    for key in database.keys():
-        if key[0][0].isupper():
-            start_keys.append(key)
-    return start_keys
+    return key[0][0][0].isupper()
 
-def key_has_valid_punctuation():
-    for start_key in possible_start_keys:
-        if not any(punctuation in ''.join(start_key) for punctuation in ending_punctuation):
-            return list(start_key)
+def find_start_seed(database, ending_punctuation=['.', '?', '!']):
+    '''
+    Picks a random key to start a generated sentence with from a dictionary.
 
-def find_valid_seed(database, ending_punctuation):
+    The key must fit the criteria of the functions key_has_valid_capitalization
+    and key_has_valid_punctuation. 
     '''
-    Generates a list of start keys, shuffles and iterates through them, and returns the first one that
-    contains no strings in the list ending_punctuation.
-    Ex: ['The', 'dog', 'jumped.'] wouldn't be returned because there's a '.' but ['No','way'] would be.
-    '''
-    possible_start_keys = find_start_keys(database)
-    random.shuffle(possible_start_keys)
-    for start_key in possible_start_keys:
-        if not any(punctuation in ''.join(start_key) for punctuation in ending_punctuation):
-            return list(start_key)
+    valid_start_keys = []
+    for i in database.keys():
+        if key_has_valid_capitalization(i) and key_has_valid_punctuation(i):
+            valid_start_keys.append(i)
+    return random.choice(valid_start_keys)
 
 def main(filename, num_key_words, chain_length, ending_punctuation=['.', '?', '!']):
     '''
@@ -131,14 +128,7 @@ def main(filename, num_key_words, chain_length, ending_punctuation=['.', '?', '!
     print (' '.join(gen_words))
 
 if __name__ == "__main__":
-    # main (filename='metamorphosis', num_key_words=4, chain_length=100)
-
-    # words = file_to_words('metamorphosis')
-    words = ['One', 'morning,', 'when', 'Gregor', 'Samsa', 'woke']
-    n=3
-    # x = (words_to_ngrams(3,words))
-    x = make_database(words, 2)
-    print (find_start_keys(x))
+    main (filename='metamorphosis', num_key_words=4, chain_length=100)
 
 '''
 Future Improvements:
