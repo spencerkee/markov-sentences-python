@@ -29,11 +29,10 @@ def words_to_ngrams(n, word_list):
     ['morning,', 'when', 'Gregor'], 
     ['when', 'Gregor', 'Samsa'], 
     ['Gregor', 'Samsa', 'woke']]
-
     '''
     ngrams = []
-    for i in range(len(words)-n+1):
-        ngrams.append(words[i:i+n])
+    for i in range(len(word_list)-n+1):
+        ngrams.append(word_list[i:i+n])
     return ngrams
 
 def make_database(word_list, num_key_words):
@@ -67,7 +66,8 @@ def key_has_valid_punctuation(key, ending_punctuation=['.', '?', '!']):
     Returns True if a key has no words that end in certain punctuation. 
 
     This is used so that generated sentences don't look like "all she wrote? Gregor kicked the ball."
-    Works by creating concatenting all last letters of words in the key and checking for any ending punctuation marks
+    Works by creating concatenting all last letters of words in the key and checking for any ending 
+    punctuation marks.
     
     EXAMPLE: 
     ('One', 'morning,') = True
@@ -90,7 +90,7 @@ def key_has_valid_capitalization(key):
 
 def find_start_seed(database, ending_punctuation=['.', '?', '!']):
     '''
-    Picks a random key to start a generated sentence with from a dictionary.
+    Returns a random key to start a generated sentence with from a dictionary.
 
     The key must fit the criteria of the functions key_has_valid_capitalization
     and key_has_valid_punctuation. 
@@ -101,47 +101,55 @@ def find_start_seed(database, ending_punctuation=['.', '?', '!']):
             valid_start_keys.append(i)
     return random.choice(valid_start_keys)
 
-def main(filename, num_key_words, chain_length, ending_punctuation=['.', '?', '!']):
+def main(filename, num_key_words, sentence_cutoff_length, ending_punctuation=['.', '?', '!']):
     '''
-    Given a file, create a database and generate a sentence beginning with
+    Given a text file, create a database and generate a sentence beginning with
     a random starting key. To generate the next word, check if the last
     num_key_words are in the database. If so, randomly select the next word
     from the words that follow the last num_key_words. If not, pick a word
     at random from the words that follow the last word in the sentence. If
     a word is generated that ends in ending_punctuation or the sentence
     length reaches chain_length, break and return the sentence as a joined string.
+
+    Given a text file, this function will create a build a dictionary (database) which 
+    indicates how often a certain word follows another given word or words. It will then 
+    randomly generate a text by using this database.
+
+    A generated sentence is returned if it reaches a word that ends in ending_punctuation or 
+    it reaches sentence_cutoff_length. If the function can't proceed because the last few words 
+    in the generated sentence don't occur anywhere in the text, it restarts the process. 
     '''
     words = file_to_words(filename)
     database = make_database(words, num_key_words)
-    gen_words = find_valid_seed(database, ending_punctuation)
-
-    while (len(gen_words) < chain_length) and (gen_words[-1][-1] not in ending_punctuation):
-        try:
-            next_word = random.choice(database[tuple(gen_words[-num_key_words:])])
-        except KeyError:
-            possible_next_words = []
-            for i in range(len(words)):
-                if words[i] == gen_words[-1]:
-                    possible_next_words.append(words[i+1])#what if only word is at the end?
-            next_word = random.choice(possible_next_words)
-        gen_words.append(next_word)
-    print (' '.join(gen_words))
+    while True:
+        return_sentence = True
+        generated_words = list(find_start_seed(database, ending_punctuation))
+        while (len(generated_words) < sentence_cutoff_length) and (generated_words[-1][-1] not in ending_punctuation):
+            try:#possibly shorten
+                next_word = generated_words[-num_key_words:]
+                next_word = tuple(next_word)
+                next_word = random.choice(database[next_word])
+            except KeyError:
+                return_sentence = False
+                break
+            generated_words.append(next_word)
+        if return_sentence:
+            return ' '.join(generated_words)
 
 if __name__ == "__main__":
-    main (filename='metamorphosis', num_key_words=4, chain_length=100)
+    print(main (filename='metamorphosis', num_key_words=1, sentence_cutoff_length=100))
 
 '''
-Future Improvements:
+Future Improvements (No guarantee of readability):
+>Store non-proper nouns as lowercase?
+>Add command line support.
+>Convert functions to generators where useful for performance.
+>Possible problem with conversion to tuple, list(('cat')) returns ('c','a','t').
+Might cause issues with num_key_words=1, but it hasn't so far.
+>Consider switching from having tuple keys to string keys.
 >Instead of essentially stepping with (num_key_words = 1) if a key
 isn't in the dictionary, construct databases for num_key_words ... 2.
 This means that if a key of length 4 isn't in the dictionary, it tries
 the last 3 words, then the last 2, and then just randomly selects from
 words that follow the last word, instead of going straight to the last step.
->Create one function find_valid_seed() that performs the same as
-find_start_keys() and valid_seed()
->Store non-proper nouns as lowercase?
->Add command line support.
->Add error handling.
->Convert functions to generators where useful for performance
->Add examples to function descriptions
 '''
