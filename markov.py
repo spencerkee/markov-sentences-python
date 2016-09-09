@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 import random
 
+'''
+Docstrings will make the most sense when read in the flow of execution.
+'''
+
 def file_to_words(filename):
     '''
     Converts a text file into a list of words.
@@ -23,11 +27,11 @@ def words_to_ngrams(n, word_list):
     Converts a list of words into a list of ngrams (a sequence of n words)
 
     EXAMPLE:
-    ['One', 'morning,', 'when', 'Gregor', 'Samsa', 'woke'] 
+    ['One', 'morning,', 'when', 'Gregor', 'Samsa', 'woke']
     would convert to:
-    [['One', 'morning,', 'when'], 
-    ['morning,', 'when', 'Gregor'], 
-    ['when', 'Gregor', 'Samsa'], 
+    [['One', 'morning,', 'when'],
+    ['morning,', 'when', 'Gregor'],
+    ['when', 'Gregor', 'Samsa'],
     ['Gregor', 'Samsa', 'woke']]
     '''
     ngrams = []
@@ -37,7 +41,7 @@ def words_to_ngrams(n, word_list):
 
 def make_database(word_list, order):
     '''
-    Takes in a list of words and creates a dictionary where the keys are every ngram and the 
+    Takes in a list of words and creates a dictionary where the keys are every ngram and the
     values are a list of every possible word that follows them (including duplicates).
 
     The keys are tuples so they will work in Python dictionaries. If ngrams occur multiple times
@@ -63,13 +67,13 @@ def make_database(word_list, order):
 
 def key_has_valid_punctuation(key, ending_punctuation=['.', '?', '!']):
     '''
-    Returns True if a key has no words that end in certain punctuation. 
+    Returns True if a key has no words that end in certain punctuation.
 
     This is used so that generated sentences don't look like "all she wrote? Gregor kicked the ball."
-    Works by creating concatenting all last letters of words in the key and checking for any ending 
+    Works by creating concatenting all last letters of words in the key and checking for any ending
     punctuation marks.
-    
-    EXAMPLE: 
+
+    EXAMPLE:
     ('One', 'morning,') = True
     ('Gregor', 'Samsa') = True
     ('when', 'Gregor') = False
@@ -82,7 +86,7 @@ def key_has_valid_capitalization(key):
 
     This is used so that the generated sentences begin more realistically.
 
-    EXAMPLE: 
+    EXAMPLE:
     ('One', 'morning,') = True
     ('vermin.', 'He') = False
     '''
@@ -93,7 +97,7 @@ def find_start_seed(database, ending_punctuation=['.', '?', '!']):
     Returns a random key to start a generated sentence with from a dictionary.
 
     The key must fit the criteria of the functions key_has_valid_capitalization
-    and key_has_valid_punctuation. 
+    and key_has_valid_punctuation.
     '''
     valid_start_keys = []
     for i in database.keys():
@@ -103,28 +107,29 @@ def find_start_seed(database, ending_punctuation=['.', '?', '!']):
 
 def main(filename, order, sentence_cutoff_length, ending_punctuation=['.', '?', '!']):
     '''
-    Given a text file, this function will create a dictionary (called the database) which 
-    indicates how often a certain word follows another given word or words. It will then 
-    randomly generate a sentence using this database by making each word in the sentence 
-    a random function of its predecessor(s). The order of the sentence indicates how many 
-    predecessors are taken into account. A sentence with order-1 is constructed by randomly
-    choosing a word that follows the previous one and might look like:
+    Given a text file, this function will create a dictionary (called the database) which
+    indicates how often a certain word follows another given word or words. It will then
+    randomly generate a sentence using this database by making each word in the sentence
+    a random function of its predecessor(s). The Order of the sentence indicates how many
+    predecessors are taken into account. A sentence with Order-1 for instance is constructed
+    by randomly choosing a word that follows the previous one and might look like:
 
     "Drops of greeting and her hurry she approached the unknown nourishment he thought."
 
     A sentence with order-2 or order-3 would likely look more realistic (possibly because
-    depending on the text it can copy entire sentences)
+    depending on the length of the text it can copy entire sentences).
 
-    A generated sentence is returned if it reaches a word that ends in ending_punctuation or 
-    it reaches sentence_cutoff_length. If the function can't proceed because the last few words 
-    in the generated sentence don't occur anywhere in the text, it restarts the process. 
+    A generated sentence is returned if it reaches a word that ends in ending_punctuation or
+    it reaches sentence_cutoff_length. If the function can't proceed because the last few words
+    in the generated sentence don't occur anywhere in the text, it restarts the process.
     '''
     words = file_to_words(filename)
     database = make_database(words, order)
     while True:
         return_sentence = True
         generated_words = list(find_start_seed(database, ending_punctuation))
-        while (len(generated_words) < sentence_cutoff_length) and (generated_words[-1][-1] not in ending_punctuation):
+        last_character_in_sentence = ''
+        while (len(generated_words) < sentence_cutoff_length) and (last_character_in_sentence not in ending_punctuation):
             try:#possibly shorten
                 next_word = generated_words[-order:]
                 next_word = tuple(next_word)
@@ -133,11 +138,16 @@ def main(filename, order, sentence_cutoff_length, ending_punctuation=['.', '?', 
                 return_sentence = False
                 break
             generated_words.append(next_word)
+            last_character_in_sentence = generated_words[-1][-1]
         if return_sentence:
             return ' '.join(generated_words)
 
 if __name__ == "__main__":
     print(main (filename='metamorphosis', order=2, sentence_cutoff_length=100))
+
+
+
+
 
 '''
 Future Improvements (No guarantee of readability):
